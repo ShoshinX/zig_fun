@@ -1,0 +1,8 @@
+# This file sets the basic flags for the ZIG Compiler
+if(NOT CMAKE_ZIG_COMPILE_OBJECT)
+    set(CMAKE_ZIG_COMPILE_OBJECT "<CMAKE_ZIG_COMPILER> build-obj <SOURCE>")
+endif()
+if(NOT CMAKE_ZIG_LINK_EXECUTABLE)
+    set(CMAKE_ZIG_LINK_EXECUTABLE "<CMAKE_ZIG_COMPILER> build-exe <OBJECT>")
+endif()
+set(CMAKE_ZIG_INFORMATION_LOADED 1)
