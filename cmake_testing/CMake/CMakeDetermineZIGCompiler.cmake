@@ -8,8 +8,8 @@ find_program(
 mark_as_advanced(CMAKE_ZIG_COMPILER)
 
 set(CMAKE_ZIG_SOURCE_FILE_EXTENSIONS zig;ZIG)
-set(CMAKE_ZIG_OUTPUT_EXTENSION .o)
-set(CMAKE_ZIG_COMPILER_ENV_VAR "ZIG")
+set(CMAKE_ZIG_OUTPUT_EXTENSION ".o")
+set(CMAKE_ZIG_COMPILER_ENV_VAR "")
 
 # Configure variables set in this file for fast reload later on
 configure_file(
