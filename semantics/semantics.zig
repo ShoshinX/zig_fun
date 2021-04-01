@@ -22,8 +22,11 @@ pub fn main() !void {
 
     // Error handling
     // give a default a value in case an error happens
-    const oof = give_error() catch 100;
-    assert(oof == 100);
+    const oof = give_error() catch error.dab;
+    process_error(oof);
+    assert(error.weewoo == error.weewoo);
+    // assert(error{weewoo} == error{weewoo}); fails
+    //assert(oof == 100);
     // try is the same as catch |err| return err;
     //const oof2 = try give_error();
     deferErrorExample(false) catch {};
@@ -37,6 +40,37 @@ pub fn main() !void {
     assert(r3 == 3.14);
     // Interop
     // Zig slices,pointers, arrays
+    // Pointers
+    // Changing var into const changes the type
+    var i: i32 = 4;
+    var ptr_t: ?*i32 = &i;
+    if (ptr_t == &i) {
+        ptr_t = null;
+    }
+    // raises an error on ptr_t.?
+    // assert(ptr_t.? != &i);
+    assert(ptr_t == null);
+    ptr_t = &i;
+    assert(ptr_t.?.* == 4);
+
+    // Arrays
+    var some_integers: [100]i32 = undefined;
+    for (some_integers) |*item, index| {
+        item.* = @intCast(i32, index);
+    }
+    assert(some_integers[50] == 50);
+
+    // Slices
+    // uncomment to show comptime abilities
+    // comptime
+    var size: u32 = 50;
+    // slices only accept usize
+    const slice_integers = some_integers[0..size];
+    assert(slice_integers[30] == 30);
+    // zig doesn't know at compile time if size is within bounds so it triggers runtime error
+    // However, if we use comptime it triggers an error in compilation.
+    // assert(slice_integers[size] == size);
+
     // Memory management
     var allocator = std.heap.GeneralPurposeAllocator(.{}){};
     defer std.debug.assert(!allocator.deinit());
@@ -50,6 +84,11 @@ pub fn main() !void {
     // uncomment to see use after free
     // gpa.destroy(u32_ptr);
     // u32_ptr.* = 1;
+
+    // Async/Await & Suspend/Resume
+    var frame = async suspend_me();
+    resume frame;
+    // show example of async/await in ziglang's website
 }
 
 pub fn give_error() !i32 {
@@ -84,4 +123,18 @@ fn max(comptime T: type, a: T, b: T) T {
     }
 }
 
-// Allocator memory management
+// A function accepting an error as an argument
+fn process_error(a: error{dab}!i32) void {
+    print("accepting error\n", .{});
+}
+
+// Suspend function
+fn suspend_me() bool {
+    suspend {
+        // Code is still being run here
+        print("I'm going to suspend!\n", .{});
+    }
+    // Code doesn't run here until I resume this frame
+    print("I'm free!\n", .{});
+    return true;
+}
