@@ -15,8 +15,9 @@ pub const hit_record = struct {
 };
 
 pub const hittable = struct {
+    const Self = @This();
     hitFn: fn (h: *hittable, r: ray.ray, t_min: f64, t_max: f64, rec: *hit_record) bool,
     pub fn hit(h: *hittable, r: ray.ray, t_min: f64, t_max: f64, rec: *hit_record) bool {
-        return h.hitFn(r, t_min, t_max, rec);
+        return h.hitFn(h, r, t_min, t_max, rec);
     }
 };

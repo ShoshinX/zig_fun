@@ -6,28 +6,18 @@ const assert = std.debug.assert;
 const color = @import("color.zig");
 const vec3 = @import("vec3.zig");
 const ray = @import("ray.zig");
+const hittable_list = @import("hittable_list.zig");
+const sphere = @import("sphere.zig");
+const rtweekend = @import("rtweekend.zig");
+const hittable = @import("hittable.zig");
 
-pub fn hit_sphere(center: vec3.point3, radius: f64, r: ray.ray) f64 {
-    const oc = r.origin().sub(center);
-    const a = r.direction().length_squared();
-    const half_b = oc.dot(r.direction());
-    const c = oc.length_squared() - (radius * radius);
-    const discriminant = half_b * half_b - a * c;
-    if (discriminant < 0) {
-        return -1.0;
-    } else {
-        return (-half_b - @sqrt(discriminant)) / a;
-    }
-}
-
-pub fn ray_color(r: ray.ray) vec3.color {
-    var t = hit_sphere(vec3.point3.init(0, 0, -1), 0.5, r);
-    if (t > 0.0) {
-        const N = r.at(t).sub(vec3.vec3.init(0, 0, -1)).unit_vector();
-        return vec3.color.init(N.x() + 1, N.y() + 1, N.z() + 1).mul(f64, 0.5);
+pub fn ray_color(r: ray.ray, world: *hittable.hittable) vec3.color {
+    var rec: hittable.hit_record = undefined;
+    if (world.hit(r, 0, rtweekend.infinity, &rec)) {
+        return rec.normal.add(vec3.color.init(1, 1, 1)).mul(f64, 0.5);
     }
     var unit_direction: vec3.vec3 = r.direction().unit_vector();
-    t = 0.5 * (unit_direction.y() + 1.0);
+    const t = 0.5 * (unit_direction.y() + 1.0);
     return vec3.color.init(1, 1, 1).mul(f64, 1.0 - t).add(vec3.color.init(0.5, 0.7, 1.0).mul(f64, t));
 }
 
@@ -36,6 +26,18 @@ pub fn main() anyerror!void {
     const aspect_ratio = 16.0 / 9.0;
     const image_width = 400;
     const image_height = @floatToInt(i64, image_width / aspect_ratio);
+
+    // Allocator
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer std.debug.assert(!gpa.deinit());
+    var allocator = &gpa.allocator;
+    // World
+    var world: hittable_list.hittable_list = try hittable_list.hittable_list.init(allocator, null);
+    defer world.clear();
+    var sphere1 = sphere.sphere.init(vec3.point3.init(0, 0, -1), 0.5);
+    var sphere2 = sphere.sphere.init(vec3.point3.init(0, -100.5, -1), 100);
+    try world.add(&sphere1.hittable);
+    try world.add(&sphere2.hittable);
 
     // Camera
     const viewport_height = 2.0;
@@ -59,7 +61,8 @@ pub fn main() anyerror!void {
             const u = @intToFloat(f64, i) / @intToFloat(f64, image_width - 1);
             const v = @intToFloat(f64, j) / @intToFloat(f64, image_height - 1);
             const r = ray.ray.init(origin, lower_left_corner.add(horizontal.mul(f64, u)).add(vertical.mul(f64, v)).sub(origin));
-            const pixel_color = ray_color(r);
+            const worldHittable = &world.hittable;
+            const pixel_color = ray_color(r, worldHittable);
             try color.write_color(std.io.getStdOut().writer(), pixel_color);
         }
     }
