@@ -17,7 +17,7 @@ pub fn ray_color(r: ray.ray, world: *hittable.hittable, depth: i64) vec3.color {
     if (depth <= 0) return vec3.color{};
     // Surprisingly, changing 0 to 0.001 saves 80% of the time used for processing
     if (world.hit(r, 0.001, rtweekend.infinity, &rec)) {
-        var target: vec3.point3 = rec.p.add(rec.normal).add(vec3.vec3.random_unit_vector());
+        var target: vec3.point3 = rec.p.add(rec.normal).add(vec3.vec3.random_in_hemisphere(rec.normal));
         return ray_color(ray.ray.init(rec.p, target.sub(rec.p)), world, depth - 1).mul(f64, 0.5);
     }
     var unit_direction: vec3.vec3 = r.direction().unit_vector();

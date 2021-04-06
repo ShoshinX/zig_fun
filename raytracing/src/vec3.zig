@@ -38,6 +38,10 @@ pub const vec3 = struct {
     pub fn random_unit_vector() vec3 {
         return vec3.random_in_unit_sphere().unit_vector();
     }
+    pub fn random_in_hemisphere(normal: vec3) vec3 {
+        const in_unit_sphere = random_in_unit_sphere();
+        if (dot(in_unit_sphere, normal) > 0.0) return in_unit_sphere else return in_unit_sphere.negate();
+    }
     pub fn x(self: vec3) f64 {
         return self.e[0];
     }
