@@ -15,7 +15,7 @@ const camera = @import("camera.zig");
 pub fn ray_color(r: ray.ray, world: *hittable.hittable, depth: i64) vec3.color {
     var rec: hittable.hit_record = undefined;
     if (depth <= 0) return vec3.color{};
-    if (world.hit(r, 0, rtweekend.infinity, &rec)) {
+    if (world.hit(r, 0.001, rtweekend.infinity, &rec)) {
         var target: vec3.point3 = rec.p.add(rec.normal).add(vec3.vec3.random_in_unit_sphere());
         return ray_color(ray.ray.init(rec.p, target.sub(rec.p)), world, depth - 1).mul(f64, 0.5);
     }
