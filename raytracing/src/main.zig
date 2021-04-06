@@ -47,17 +47,19 @@ pub fn main() anyerror!void {
     defer world.clear();
 
     var material_ground = material.lambertian.init(vec3.color.init(0.8, 0.8, 0.0));
-    var material_center = material.lambertian.init(vec3.color.init(0.7, 0.3, 0.3));
-    var material_left = material.metal.init(vec3.color.init(0.8, 0.8, 0.8), 0.3);
+    var material_center = material.lambertian.init(vec3.color.init(0.1, 0.2, 0.5));
+    var material_left = material.dielectric.init(1.5);
     var material_right = material.metal.init(vec3.color.init(0.8, 0.6, 0.2), 1.0);
     var sphere1 = sphere.sphere.init(vec3.point3.init(0, -100.5, -1), 100, &material_ground.material);
     var sphere2 = sphere.sphere.init(vec3.point3.init(0, 0, -1), 0.5, &material_center.material);
     var sphere3 = sphere.sphere.init(vec3.point3.init(-1, 0, -1), 0.5, &material_left.material);
-    var sphere4 = sphere.sphere.init(vec3.point3.init(1, 0, -1), 0.5, &material_right.material);
+    var sphere4 = sphere.sphere.init(vec3.point3.init(-1, 0, -1), -0.4, &material_left.material);
+    var sphere5 = sphere.sphere.init(vec3.point3.init(1, 0, -1), 0.5, &material_right.material);
     try world.add(&sphere1.hittable);
     try world.add(&sphere2.hittable);
     try world.add(&sphere3.hittable);
     try world.add(&sphere4.hittable);
+    try world.add(&sphere5.hittable);
 
     // Camera
     const cam = camera.camera.init();

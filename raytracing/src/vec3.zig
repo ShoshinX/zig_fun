@@ -116,6 +116,12 @@ pub const vec3 = struct {
     pub fn reflect(v: vec3, n: vec3) vec3 {
         return v.sub(n.mul(f64, 2 * v.dot(n)));
     }
+    pub fn refract(uv: vec3, n: vec3, etai_over_etat: f64) vec3 {
+        const cos_theta = std.math.min(uv.negate().dot(n), 1.0);
+        const r_out_perp = (uv.add(n.mul(f64, cos_theta))).mul(f64, etai_over_etat);
+        const r_out_parallel = n.mul(f64, -@sqrt(@fabs(1.0 - r_out_perp.length_squared())));
+        return r_out_perp.add(r_out_parallel);
+    }
 };
 
 // vec3 utility function
