@@ -1,10 +1,12 @@
 const std = @import("std");
 const ray = @import("ray.zig");
 const vec3 = @import("vec3.zig");
+const material = @import("material.zig");
 
 pub const hit_record = struct {
     p: vec3.point3,
     normal: vec3.vec3,
+    mat_ptr: *material.material,
     t: f64,
     front_face: bool,
 

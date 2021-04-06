@@ -109,6 +109,13 @@ pub const vec3 = struct {
     pub fn unit_vector(v: vec3) vec3 {
         return div(v, v.length());
     }
+    pub fn near_zero(v: vec3) bool {
+        const s = 1e-8;
+        return (@fabs(v.e[0]) < s) and (@fabs(v.e[1]) < s) and (@fabs(v.e[2]) < s);
+    }
+    pub fn reflect(v: vec3, n: vec3) vec3 {
+        return v.sub(n.mul(f64, 2 * v.dot(n)));
+    }
 };
 
 // vec3 utility function

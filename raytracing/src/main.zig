@@ -11,14 +11,19 @@ const sphere = @import("sphere.zig");
 const rtweekend = @import("rtweekend.zig");
 const hittable = @import("hittable.zig");
 const camera = @import("camera.zig");
+const material = @import("material.zig");
 
 pub fn ray_color(r: ray.ray, world: *hittable.hittable, depth: i64) vec3.color {
     var rec: hittable.hit_record = undefined;
     if (depth <= 0) return vec3.color{};
     // Surprisingly, changing 0 to 0.001 saves 80% of the time used for processing
     if (world.hit(r, 0.001, rtweekend.infinity, &rec)) {
-        var target: vec3.point3 = rec.p.add(rec.normal).add(vec3.vec3.random_in_hemisphere(rec.normal));
-        return ray_color(ray.ray.init(rec.p, target.sub(rec.p)), world, depth - 1).mul(f64, 0.5);
+        var scattered: ray.ray = undefined;
+        var attenuation: vec3.color = undefined;
+        if (rec.mat_ptr.scatter(r, rec, &attenuation, &scattered)) {
+            return attenuation.mul(vec3.vec3, ray_color(scattered, world, depth - 1));
+        }
+        return vec3.color{};
     }
     var unit_direction: vec3.vec3 = r.direction().unit_vector();
     const t = 0.5 * (unit_direction.y() + 1.0);
@@ -40,10 +45,19 @@ pub fn main() anyerror!void {
     // World
     var world: hittable_list.hittable_list = try hittable_list.hittable_list.init(allocator, null);
     defer world.clear();
-    var sphere1 = sphere.sphere.init(vec3.point3.init(0, 0, -1), 0.5);
-    var sphere2 = sphere.sphere.init(vec3.point3.init(0, -100.5, -1), 100);
+
+    var material_ground = material.lambertian.init(vec3.color.init(0.8, 0.8, 0.0));
+    var material_center = material.lambertian.init(vec3.color.init(0.7, 0.3, 0.3));
+    var material_left = material.metal.init(vec3.color.init(0.8, 0.8, 0.8));
+    var material_right = material.metal.init(vec3.color.init(0.8, 0.6, 0.2));
+    var sphere1 = sphere.sphere.init(vec3.point3.init(0, -100.5, -1), 100, &material_ground.material);
+    var sphere2 = sphere.sphere.init(vec3.point3.init(0, 0, -1), 0.5, &material_center.material);
+    var sphere3 = sphere.sphere.init(vec3.point3.init(-1, 0, -1), 0.5, &material_left.material);
+    var sphere4 = sphere.sphere.init(vec3.point3.init(1, 0, -1), 0.5, &material_right.material);
     try world.add(&sphere1.hittable);
     try world.add(&sphere2.hittable);
+    try world.add(&sphere3.hittable);
+    try world.add(&sphere4.hittable);
 
     // Camera
     const cam = camera.camera.init();
