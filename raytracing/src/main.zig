@@ -12,10 +12,12 @@ const rtweekend = @import("rtweekend.zig");
 const hittable = @import("hittable.zig");
 const camera = @import("camera.zig");
 
-pub fn ray_color(r: ray.ray, world: *hittable.hittable) vec3.color {
+pub fn ray_color(r: ray.ray, world: *hittable.hittable, depth: i64) vec3.color {
     var rec: hittable.hit_record = undefined;
+    if (depth <= 0) return vec3.color{};
     if (world.hit(r, 0, rtweekend.infinity, &rec)) {
-        return rec.normal.add(vec3.color.init(1, 1, 1)).mul(f64, 0.5);
+        var target: vec3.point3 = rec.p.add(rec.normal).add(vec3.vec3.random_in_unit_sphere());
+        return ray_color(ray.ray.init(rec.p, target.sub(rec.p)), world, depth - 1).mul(f64, 0.5);
     }
     var unit_direction: vec3.vec3 = r.direction().unit_vector();
     const t = 0.5 * (unit_direction.y() + 1.0);
@@ -28,6 +30,7 @@ pub fn main() anyerror!void {
     const image_width = 400;
     const image_height = @floatToInt(i64, image_width / aspect_ratio);
     const samples_per_pixel = 100;
+    const max_depth = 50;
 
     // Allocator
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -59,7 +62,7 @@ pub fn main() anyerror!void {
                 const v = (@intToFloat(f64, j) + rtweekend.random_double(void, 0, 0)) / @intToFloat(f64, image_height - 1);
                 const r = cam.get_ray(u, v);
                 const worldHittable = &world.hittable;
-                pixel_color.addAssign(ray_color(r, worldHittable));
+                pixel_color.addAssign(ray_color(r, worldHittable, max_depth));
             }
             try color.write_color(std.io.getStdOut().writer(), pixel_color, samples_per_pixel);
         }

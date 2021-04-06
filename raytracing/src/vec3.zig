@@ -2,15 +2,37 @@ const std = @import("std");
 const printerr = std.debug.print;
 const assert = std.debug.assert;
 const mem = std.mem;
+const rtweekend = @import("rtweekend.zig");
 
 pub const point3 = vec3; // 3D point
 pub const color = vec3; // RGB color
+
+pub const config_random = struct {
+    max: f64 = 0,
+    min: f64 = 0,
+};
 
 pub const vec3 = struct {
     e: [3]f64 = [_]f64{ 0, 0, 0 },
     // From what I've read in the zig std lib, init is convention for stack based initialisation.
     pub fn init(e1: f64, e2: f64, e3: f64) vec3 {
         return vec3{ .e = [_]f64{ e1, e2, e3 } };
+    }
+    pub fn random(comptime config: config_random) vec3 {
+        const max = config.max;
+        const min = config.min;
+        if (max == 0.0 and min == 0.0) {
+            return vec3.init(rtweekend.random_double(void, 0, 0), rtweekend.random_double(void, 0, 0), rtweekend.random_double(void, 0, 0));
+        } else {
+            return vec3.init(rtweekend.random_double(f64, max, min), rtweekend.random_double(f64, max, min), rtweekend.random_double(f64, max, min));
+        }
+    }
+    pub fn random_in_unit_sphere() vec3 {
+        while (true) {
+            const p = vec3.random(.{ .min = -1, .max = 1 });
+            if (p.length_squared() >= 1) continue;
+            return p;
+        }
     }
     pub fn x(self: vec3) f64 {
         return self.e[0];
