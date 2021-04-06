@@ -10,6 +10,7 @@ const hittable_list = @import("hittable_list.zig");
 const sphere = @import("sphere.zig");
 const rtweekend = @import("rtweekend.zig");
 const hittable = @import("hittable.zig");
+const camera = @import("camera.zig");
 
 pub fn ray_color(r: ray.ray, world: *hittable.hittable) vec3.color {
     var rec: hittable.hit_record = undefined;
@@ -26,6 +27,7 @@ pub fn main() anyerror!void {
     const aspect_ratio = 16.0 / 9.0;
     const image_width = 400;
     const image_height = @floatToInt(i64, image_width / aspect_ratio);
+    const samples_per_pixel = 100;
 
     // Allocator
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -40,17 +42,9 @@ pub fn main() anyerror!void {
     try world.add(&sphere2.hittable);
 
     // Camera
-    const viewport_height = 2.0;
-    const viewport_width = aspect_ratio * viewport_height;
-    const focal_length = 1.0;
-
-    const origin = vec3.point3{};
-    const horizontal = vec3.vec3.init(viewport_width, 0, 0);
-    const vertical = vec3.vec3.init(0, viewport_height, 0);
-    var lower_left_corner = origin.sub(horizontal.div(2)).sub(vertical.div(2)).sub(vec3.vec3.init(0, 0, focal_length));
+    const cam = camera.camera.init();
 
     // Render
-
     try print("P3\n{} {}\n255\n", .{ image_width, image_height });
 
     var j: i64 = image_height - 1;
@@ -58,12 +52,16 @@ pub fn main() anyerror!void {
         try printerr("\rScanlines remaining: {} ", .{j});
         var i: i64 = 0;
         while (i < image_width) : (i += 1) {
-            const u = @intToFloat(f64, i) / @intToFloat(f64, image_width - 1);
-            const v = @intToFloat(f64, j) / @intToFloat(f64, image_height - 1);
-            const r = ray.ray.init(origin, lower_left_corner.add(horizontal.mul(f64, u)).add(vertical.mul(f64, v)).sub(origin));
-            const worldHittable = &world.hittable;
-            const pixel_color = ray_color(r, worldHittable);
-            try color.write_color(std.io.getStdOut().writer(), pixel_color);
+            var pixel_color: vec3.color = vec3.color.init(0, 0, 0);
+            var s: i64 = 0;
+            while (s < samples_per_pixel) : (s += 1) {
+                const u = (@intToFloat(f64, i) + rtweekend.random_double(void, 0, 0)) / @intToFloat(f64, image_width - 1);
+                const v = (@intToFloat(f64, j) + rtweekend.random_double(void, 0, 0)) / @intToFloat(f64, image_height - 1);
+                const r = cam.get_ray(u, v);
+                const worldHittable = &world.hittable;
+                pixel_color.addAssign(ray_color(r, worldHittable));
+            }
+            try color.write_color(std.io.getStdOut().writer(), pixel_color, samples_per_pixel);
         }
     }
     try printerr("\nDone.\n", .{});
