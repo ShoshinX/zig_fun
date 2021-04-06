@@ -47,23 +47,23 @@ pub fn main() anyerror!void {
     var world: hittable_list.hittable_list = try hittable_list.hittable_list.init(allocator, null);
     defer world.clear();
 
-    //var macterial_ground = material.lambertian.init(vec3.color.init(0.8, 0.8, 0.0));
-    //var material_center = material.lambertian.init(vec3.color.init(0.1, 0.2, 0.5));
-    var material_left = material.lambertian.init(vec3.color.init(0, 0, 1));
-    var material_right = material.lambertian.init(vec3.color.init(1, 0, 0));
-    var sphere1 = sphere.sphere.init(vec3.point3.init(-R, 0, -1), R, &material_left.material);
-    var sphere2 = sphere.sphere.init(vec3.point3.init(R, 0, -1), R, &material_right.material);
-    //var sphere3 = sphere.sphere.init(vec3.point3.init(-1, 0, -1), 0.5, &material_left.material);
-    //var sphere4 = sphere.sphere.init(vec3.point3.init(-1, 0, -1), -0.4, &material_left.material);
-    //var sphere5 = sphere.sphere.init(vec3.point3.init(1, 0, -1), 0.5, &material_right.material);
+    var material_ground = material.lambertian.init(vec3.color.init(0.8, 0.8, 0.0));
+    var material_center = material.lambertian.init(vec3.color.init(0.1, 0.2, 0.5));
+    var material_left = material.dielectric.init(1.5);
+    var material_right = material.metal.init(vec3.color.init(0.8, 0.6, 0.2), 0.0);
+    var sphere1 = sphere.sphere.init(vec3.point3.init(0, -100.5, -1), 100, &material_ground.material);
+    var sphere2 = sphere.sphere.init(vec3.point3.init(0, 0, -1), 0.5, &material_center.material);
+    var sphere3 = sphere.sphere.init(vec3.point3.init(-1, 0, -1), 0.5, &material_left.material);
+    var sphere4 = sphere.sphere.init(vec3.point3.init(-1, 0, -1), -0.45, &material_left.material);
+    var sphere5 = sphere.sphere.init(vec3.point3.init(1, 0, -1), 0.5, &material_right.material);
     try world.add(&sphere1.hittable);
     try world.add(&sphere2.hittable);
-    //try world.add(&sphere3.hittable);
-    //try world.add(&sphere4.hittable);
-    //try world.add(&sphere5.hittable);
+    try world.add(&sphere3.hittable);
+    try world.add(&sphere4.hittable);
+    try world.add(&sphere5.hittable);
 
     // Camera
-    const cam = camera.camera.init(90.0, aspect_ratio);
+    const cam = camera.camera.init(vec3.point3.init(-2, 2, 1), vec3.point3.init(0, 0, -1), vec3.vec3.init(0, 1, 0), 90.0, aspect_ratio);
 
     // Render
     try print("P3\n{} {}\n255\n", .{ image_width, image_height });
