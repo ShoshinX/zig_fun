@@ -63,7 +63,12 @@ pub fn main() anyerror!void {
     try world.add(&sphere5.hittable);
 
     // Camera
-    const cam = camera.camera.init(vec3.point3.init(-2, 2, 1), vec3.point3.init(0, 0, -1), vec3.vec3.init(0, 1, 0), 90.0, aspect_ratio);
+    const lookfrom = vec3.vec3.init(3, 3, 2);
+    const lookat = vec3.vec3.init(0, 0, -1);
+    const vup = vec3.vec3.init(0, 1, 0);
+    const dist_to_focus = (lookfrom.sub(lookat)).length();
+    const aperture = 2.0;
+    const cam = camera.camera.init(lookfrom, lookat, vup, 20.0, aspect_ratio, aperture, dist_to_focus);
 
     // Render
     try print("P3\n{} {}\n255\n", .{ image_width, image_height });

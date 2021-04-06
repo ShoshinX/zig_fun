@@ -122,6 +122,13 @@ pub const vec3 = struct {
         const r_out_parallel = n.mul(f64, -@sqrt(@fabs(1.0 - r_out_perp.length_squared())));
         return r_out_perp.add(r_out_parallel);
     }
+    pub fn random_in_unit_disk() vec3 {
+        while (true) {
+            var p = vec3.init(rtweekend.random_double(f64, -1, 1), rtweekend.random_double(f64, -1, 1), 0);
+            if (p.length_squared() >= 1) continue;
+            return p;
+        }
+    }
 };
 
 // vec3 utility function
