@@ -29,10 +29,14 @@ pub const vec3 = struct {
     }
     pub fn random_in_unit_sphere() vec3 {
         while (true) {
+            // This is cool
             const p = vec3.random(.{ .min = -1, .max = 1 });
             if (p.length_squared() >= 1) continue;
             return p;
         }
+    }
+    pub fn random_unit_vector() vec3 {
+        return vec3.random_in_unit_sphere().unit_vector();
     }
     pub fn x(self: vec3) f64 {
         return self.e[0];
