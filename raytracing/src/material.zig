@@ -35,16 +35,18 @@ pub const metal = struct {
     const Self = @This();
     albedo: vec3.color,
     material: material,
-    pub fn init(a: vec3.color) lambertian {
-        return lambertian{
+    fuzz: f64,
+    pub fn init(a: vec3.color, f: f64) metal {
+        return metal{
             .albedo = a,
+            .fuzz = if (f < 1) f else 1,
             .material = material{ .scatterFn = scatter },
         };
     }
     pub fn scatter(m: *material, r_in: ray.ray, rec: hittable.hit_record, attenuation: *vec3.color, scattered: *ray.ray) bool {
         const self = @fieldParentPtr(Self, "material", m);
         const reflected = r_in.direction().unit_vector().reflect(rec.normal);
-        scattered.* = ray.ray.init(rec.p, reflected);
+        scattered.* = ray.ray.init(rec.p, reflected.add(vec3.vec3.random_in_unit_sphere().mul(f64, self.fuzz)));
         attenuation.* = self.albedo;
         // limited precision here to speed things up
         return scattered.direction().dot(rec.normal) > 0.0001;
