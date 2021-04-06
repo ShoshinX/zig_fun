@@ -9,9 +9,10 @@ pub const camera = struct {
     horizontal: vec3.vec3,
     vertical: vec3.vec3,
 
-    pub fn init() camera {
-        const aspect_ratio = 16.0 / 9.0;
-        const viewport_height = 2.0;
+    pub fn init(vfov: f64, aspect_ratio: f64) camera {
+        const theta = rtweekend.degrees_to_radians(vfov);
+        const h = std.math.tan(theta / 2);
+        const viewport_height = 2.0 * h;
         const viewport_width = aspect_ratio * viewport_height;
         const focal_length = 1.0;
         var res = camera{
