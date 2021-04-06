@@ -13,6 +13,47 @@ const hittable = @import("hittable.zig");
 const camera = @import("camera.zig");
 const material = @import("material.zig");
 
+pub fn random_scene(allocator: *std.mem.Allocator) !*hittable_list.hittable_list {
+    var world: hittable_list.hittable_list = try hittable_list.hittable_list.init(allocator, null);
+
+    var material_ground = material.lambertian.init(vec3.color.init(0.5, 0.5, 0.5));
+    try world.add(&sphere.sphere.init(vec3.point3.init(0, -1000, 0), 1000, &material_ground.material).hittable);
+
+    var a: i64 = -11;
+    while (a < 11) : (a += 1) {
+        var b: i64 = -11;
+        while (b < 11) : (b += 1) {
+            const choose_mat = rtweekend.random_double(void, 0, 0);
+            const center = vec3.point3.init(@intToFloat(f64, a) + 0.9 * rtweekend.random_double(void, 0, 0), 0.2, @intToFloat(f64, b) + 0.9 * rtweekend.random_double(void, 0, 0));
+            if ((center.sub(vec3.vec3.init(4, 0.2, 0))).length() > 0.9) {
+                var sphere_material: *material.material = undefined;
+                if (choose_mat < 0.8) {
+                    const albedo = vec3.color.random(.{});
+                    sphere_material = &material.lambertian.init(albedo).material;
+                    try world.add(&sphere.sphere.init(center, 0.2, sphere_material).hittable);
+                } else if (choose_mat < 0.95) {
+                    const albedo = vec3.color.random(.{ .max = 0.5, .min = 1 });
+                    const fuzz = rtweekend.random_double(f64, 0, 0.5);
+                    sphere_material = &material.metal.init(albedo, fuzz).material;
+                    try world.add(&sphere.sphere.init(center, 0.2, sphere_material).hittable);
+                } else {
+                    sphere_material = &material.dielectric.init(1.5).material;
+                    try world.add(&sphere.sphere.init(center, 0.2, sphere_material).hittable);
+                }
+            }
+        }
+    }
+
+    var material1 = material.dielectric.init(1.5);
+    try world.add(&sphere.sphere.init(vec3.vec3.init(0, 1, 0), 1, &material1.material).hittable);
+    var material2 = material.lambertian.init(vec3.color.init(0.4, 0.2, 0.1));
+    try world.add(&sphere.sphere.init(vec3.vec3.init(-4, 1, 0), 1, &material2.material).hittable);
+    var material3 = material.metal.init(vec3.color.init(0.7, 0.6, 0.5), 0.0);
+    try world.add(&sphere.sphere.init(vec3.vec3.init(4, 1, 0), 1, &material3.material).hittable);
+
+    return &world;
+}
+
 pub fn ray_color(r: ray.ray, world: *hittable.hittable, depth: i64) vec3.color {
     var rec: hittable.hit_record = undefined;
     if (depth <= 0) return vec3.color{};
@@ -32,10 +73,10 @@ pub fn ray_color(r: ray.ray, world: *hittable.hittable, depth: i64) vec3.color {
 
 pub fn main() anyerror!void {
     // Image
-    const aspect_ratio = 16.0 / 9.0;
-    const image_width = 400;
+    const aspect_ratio = 3.0 / 2.0;
+    const image_width = 1200;
     const image_height = @floatToInt(i64, image_width / aspect_ratio);
-    const samples_per_pixel = 100;
+    const samples_per_pixel = 10;
     const max_depth = 50;
 
     // Allocator
@@ -43,31 +84,51 @@ pub fn main() anyerror!void {
     defer std.debug.assert(!gpa.deinit());
     var allocator = &gpa.allocator;
     // World
-    const R = @cos(@as(f64, rtweekend.pi) / 4.0);
     var world: hittable_list.hittable_list = try hittable_list.hittable_list.init(allocator, null);
+
+    var material_ground = material.lambertian.init(vec3.color.init(0.5, 0.5, 0.5));
+    try world.add(&sphere.sphere.init(vec3.point3.init(0, -1000, 0), 1000, &material_ground.material).hittable);
+
+    var a: i64 = -11;
+    while (a < 11) : (a += 1) {
+        var b: i64 = -11;
+        while (b < 11) : (b += 1) {
+            const choose_mat = rtweekend.random_double(void, 0, 0);
+            const center = vec3.point3.init(@intToFloat(f64, a) + 0.9 * rtweekend.random_double(void, 0, 0), 0.2, @intToFloat(f64, b) + 0.9 * rtweekend.random_double(void, 0, 0));
+            if ((center.sub(vec3.vec3.init(4, 0.2, 0))).length() > 0.9) {
+                var sphere_material: *material.material = undefined;
+                if (choose_mat < 0.8) {
+                    const albedo = vec3.color.random(.{});
+                    sphere_material = &material.lambertian.init(albedo).material;
+                    try world.add(&sphere.sphere.init(center, 0.2, sphere_material).hittable);
+                } else if (choose_mat < 0.95) {
+                    const albedo = vec3.color.random(.{ .max = 0.5, .min = 1 });
+                    const fuzz = rtweekend.random_double(f64, 0, 0.5);
+                    sphere_material = &material.metal.init(albedo, fuzz).material;
+                    try world.add(&sphere.sphere.init(center, 0.2, sphere_material).hittable);
+                } else {
+                    sphere_material = &material.dielectric.init(1.5).material;
+                    try world.add(&sphere.sphere.init(center, 0.2, sphere_material).hittable);
+                }
+            }
+        }
+    }
+
+    var material1 = material.dielectric.init(1.5);
+    try world.add(&sphere.sphere.init(vec3.vec3.init(0, 1, 0), 1, &material1.material).hittable);
+    var material2 = material.lambertian.init(vec3.color.init(0.4, 0.2, 0.1));
+    try world.add(&sphere.sphere.init(vec3.vec3.init(-4, 1, 0), 1, &material2.material).hittable);
+    var material3 = material.metal.init(vec3.color.init(0.7, 0.6, 0.5), 0.0);
+    try world.add(&sphere.sphere.init(vec3.vec3.init(4, 1, 0), 1, &material3.material).hittable);
+    // var world: hittable_list.hittable_list = try hittable_list.hittable_list.init(allocator, null);
     defer world.clear();
 
-    var material_ground = material.lambertian.init(vec3.color.init(0.8, 0.8, 0.0));
-    var material_center = material.lambertian.init(vec3.color.init(0.1, 0.2, 0.5));
-    var material_left = material.dielectric.init(1.5);
-    var material_right = material.metal.init(vec3.color.init(0.8, 0.6, 0.2), 0.0);
-    var sphere1 = sphere.sphere.init(vec3.point3.init(0, -100.5, -1), 100, &material_ground.material);
-    var sphere2 = sphere.sphere.init(vec3.point3.init(0, 0, -1), 0.5, &material_center.material);
-    var sphere3 = sphere.sphere.init(vec3.point3.init(-1, 0, -1), 0.5, &material_left.material);
-    var sphere4 = sphere.sphere.init(vec3.point3.init(-1, 0, -1), -0.45, &material_left.material);
-    var sphere5 = sphere.sphere.init(vec3.point3.init(1, 0, -1), 0.5, &material_right.material);
-    try world.add(&sphere1.hittable);
-    try world.add(&sphere2.hittable);
-    try world.add(&sphere3.hittable);
-    try world.add(&sphere4.hittable);
-    try world.add(&sphere5.hittable);
-
     // Camera
-    const lookfrom = vec3.vec3.init(3, 3, 2);
-    const lookat = vec3.vec3.init(0, 0, -1);
+    const lookfrom = vec3.vec3.init(13, 2, 3);
+    const lookat = vec3.vec3.init(0, 0, 0);
     const vup = vec3.vec3.init(0, 1, 0);
-    const dist_to_focus = (lookfrom.sub(lookat)).length();
-    const aperture = 2.0;
+    const dist_to_focus = 10.0;
+    const aperture = 0.1;
     const cam = camera.camera.init(lookfrom, lookat, vup, 20.0, aspect_ratio, aperture, dist_to_focus);
 
     // Render
