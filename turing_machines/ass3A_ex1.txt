@@ -1,0 +1,154 @@
+; parser
+0 * * * p0
+
+; check first argument
+p0 * * r p0
+p0 # # r p1
+p0 _ _ * halt-reject
+
+; check second argument
+p1 * * r p1
+p1 # # r p2
+p1 _ _ * halt-reject
+
+; check third argument
+p2 * * r p2
+p2 _ _ l r0
+
+; reset head
+r0 * * l r0
+r0 _ _ r a0search_c=0
+
+; arg0#arg1#arg2
+; 0 0 no carry for arg 2
+; 0 1 no carry for arg 2
+; 1 0 no carry for arg 2
+; 1 1 carry for arg 2
+; eliminate the carry when it reaches arg 2 i.e evaluate arg2
+; semantic analysis
+; carry state and non carry state
+; searches the last bit of arg 0 knowing the carry
+a0search_c=0 * * r a0search_c=0
+a0search_c=0 @ @ l a0search_c=0
+a0search_c=0 # # l a0_c=0
+
+a0search_c=1 * * r a0search_c=1
+a0search_c=1 @ @ l a0search_c=1
+a0search_c=1 # # l a0_c=1
+
+; replace least significant bit appropriately
+a0_c=0    0 @ * gotoa1_a0=0_c=0
+a0_c=0    1 @ * gotoa1_a0=1_c=0
+a0_c=1    0 @ * gotoa1_a0=0_c=0
+a0_c=1    1 @ * gotoa1_a0=1_c=1
+
+;goto arg1
+gotoa1_a0=0_c=0 * * r gotoa1_a0=0_c=0
+gotoa1_a0=0_c=0 # # r a1search_a0=0_c=0
+
+gotoa1_a0=1_c=0 * * r gotoa1_a0=1_c=0
+gotoa1_a0=1_c=0 # # r a1search_a0=1_c=0
+
+gotoa1_a0=0_c=1 * * r gotoa1_a0=0_c=1
+gotoa1_a0=0_c=1 # # r a1search_a0=0_c=1
+
+gotoa1_a0=1_c=1 * * r gotoa1_a0=1_c=1
+gotoa1_a0=1_c=1 # # r a1search_a0=1_c=1
+
+; searches the last bit of arg 1 knowing a0 and carry
+a1search_a0=0_c=0 * * r a1search_a0=0_c=0
+a1search_a0=0_c=0 # # l a1_a0=0_c=0
+a1search_a0=1_c=0 * * r a1search_a0=1_c=0
+a1search_a0=1_c=0 # # l a1_a0=1_c=0
+a1search_a0=0_c=1 * * r a1search_a0=0_c=1
+a1search_a0=0_c=1 # # l a1_a0=0_c=1
+a1search_a0=1_c=1 * * r a1search_a0=1_c=1
+a1search_a0=1_c=1 # # l a1_a0=1_c=1
+
+; evaluate bit in arg 1
+a1_a0=0_c=0 0 @ * gotoa2_a1=0_a0=0_c=0
+a1_a0=0_c=0 1 @ * gotoa2_a1=1_a0=0_c=0
+a1_a0=1_c=0 0 @ * gotoa2_a1=0_a0=1_c=0
+a1_a0=1_c=0 1 @ * gotoa2_a1=1_a0=1_c=0
+a1_a0=0_c=1 0 @ * gotoa2_a1=0_a0=0_c=1
+a1_a0=0_c=1 1 @ * gotoa2_a1=1_a0=0_c=1
+a1_a0=1_c=1 0 @ * gotoa2_a1=0_a0=1_c=1
+a1_a0=1_c=1 1 @ * gotoa2_a1=1_a0=1_c=1
+
+;goto arg2 ; TODO skip @s in arg1
+gotoa2_a1=0_a0=0_c=0 * * r gotoa2_a1=0_a0=0_c=0
+gotoa2_a1=0_a0=0_c=0 # # r a2search_a1=0_a0=0_c=0
+
+gotoa2_a1=1_a0=0_c=0 * * r gotoa2_a1=1_a0=0_c=0
+gotoa2_a1=1_a0=0_c=0 # # r a2search_a1=1_a0=0_c=0
+
+gotoa2_a1=0_a0=1_c=0 * * r gotoa2_a1=0_a0=1_c=0
+gotoa2_a1=0_a0=1_c=0 # # r a2search_a1=0_a0=1_c=0
+
+gotoa2_a1=1_a0=1_c=0 * * r gotoa2_a1=1_a0=0_c=0
+gotoa2_a1=1_a0=1_c=0 # # r a2search_a1=1_a0=0_c=0
+
+gotoa2_a1=0_a0=0_c=1 * * r gotoa2_a1=0_a0=0_c=1
+gotoa2_a1=0_a0=0_c=1 # # r a2search_a1=0_a0=0_c=1
+
+gotoa2_a1=1_a0=0_c=1 * * r gotoa2_a1=1_a0=0_c=1
+gotoa2_a1=1_a0=0_c=1 # # r a2search_a1=1_a0=0_c=1
+
+gotoa2_a1=0_a0=1_c=1 * * r gotoa2_a1=0_a0=1_c=1
+gotoa2_a1=0_a0=1_c=1 # # r a2search_a1=0_a0=1_c=1
+
+gotoa2_a1=1_a0=1_c=1 * * r gotoa2_a1=1_a0=1_c=1
+gotoa2_a1=1_a0=1_c=1 # # r a2search_a1=1_a0=1_c=1
+
+;TODO
+;arg2 search the last significant bit in arg2
+a2search_a1=0_a0=0_c=0 * * r a2search_a1=0_a0=0_c=0
+a2search_a1=0_a0=0_c=0 _ _ l a2_a1=0_a0=0_c=0
+
+a2search_a1=1_a0=0_c=0 * * r a2search_a1=1_a0=0_c=0
+a2search_a1=1_a0=0_c=0 _ _ l a2_a1=1_a0=0_c=0
+
+a2search_a1=0_a0=1_c=0 * * r a2search_a1=0_a0=1_c=0
+a2search_a1=0_a0=1_c=0 _ _ l a2_a1=0_a0=1_c=0
+
+a2search_a1=1_a0=1_c=0 * * r a2search_a1=1_a0=1_c=0
+a2search_a1=1_a0=1_c=0 _ _ l a2_a1=1_a0=1_c=0
+
+a2search_a1=0_a0=0_c=1 * * r a2search_a1=0_a0=0_c=1
+a2search_a1=0_a0=0_c=1 _ _ l a2_a1=0_a0=0_c=1
+
+a2search_a1=1_a0=0_c=1 * * r a2search_a1=1_a0=0_c=1
+a2search_a1=1_a0=0_c=1 _ _ l a2_a1=1_a0=0_c=1
+
+a2search_a1=0_a0=1_c=1 * * r a2search_a1=0_a0=1_c=1
+a2search_a1=0_a0=1_c=1 _ _ l a2_a1=0_a0=1_c=1
+
+a2search_a1=1_a0=1_c=1 * * r a2search_a1=1_a0=1_c=1
+a2search_a1=1_a0=1_c=1 _ _ l a2_a1=1_a0=1_c=1
+
+;evaluate bit in arg2
+a2_a1=0_a0=0_c=0 * * * halt-reject
+;a2_a1=0_a0=0_c=0
+
+a2_a1=1_a0=0_c=0 * * * halt-reject
+;a2_a1=1_a0=0_c=0
+
+a2_a1=0_a0=1_c=0 * * * halt-reject
+;a2_a1=0_a0=1_c=0
+
+a2_a1=1_a0=1_c=0 * * * halt-reject
+;a2_a1=1_a0=1_c=0
+
+a2_a1=0_a0=0_c=1 * * * halt-reject
+;a2_a1=0_a0=0_c=1
+
+a2_a1=1_a0=0_c=1 * * * halt-reject
+;a2_a1=1_a0=0_c=1
+
+a2_a1=0_a0=1_c=1 * * * halt-reject
+;a2_a1=0_a0=1_c=1
+
+a2_a1=1_a0=1_c=1 * * * halt-reject
+;a2_a1=1_a0=1_c=1
+
+
