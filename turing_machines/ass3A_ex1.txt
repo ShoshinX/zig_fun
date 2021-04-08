@@ -13,6 +13,7 @@ p1 _ _ * halt-reject
 
 ; check third argument
 p2 * * r p2
+p2 # # * halt-reject
 p2 _ _ l reset_c=0
 
 ; reset head
