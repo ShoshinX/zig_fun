@@ -1,0 +1,140 @@
+; DO simple 1s and 0s first
+; assumption: properly formatted
+; reverse polish notation
+; use the reverse polish binary calculator
+; use simple inputs first i.e 1s and 0s
+
+; when simple inputs are done, simplify constants with variables
+; then bruteforce it
+
+; Use heap start point at @
+; Use stack point at $
+
+;1 setup heap with all variables and their initial values be 0
+;2 Evaluate expression
+    ; when we see a variable then go to the heap to see if it's a one or zero then continue evaluating;
+;3 if expression is false then add 1 to the heap else halt-accept
+;4 if heap pointer is at @ then halt-reject else goto step 2
+
+; This is a simple stack language interpreter.
+; It evaluates Boolean expressions entered in reverse Polish notation.
+; Input: a Boolean expression in reverse Polish.
+; Use 1,0,&,|,~ for true, false, and, or not, respectively, without spaces.
+; Example inputs:
+;   11&    - returns 1  (= 1 and 1)
+;   01~1|& - returns 0    (= (not 1 or 1) and 0)
+
+; start from the right
+0 * * r 0
+0 _ @ * init_heap ; setup heap
+
+;reset * * l reset
+;reset _ _ r init_heap
+
+; find all the variables and set their values
+init_heap * * l init_heap
+init_heap a A * add_A
+init_heap b B * add_B
+init_heap c C * add_C
+init_heap d D * add_D
+init_heap e E * add_E
+init_heap f F * add_F
+init_heap _ _ r reset_expr; when you've reached the end restore the boolean expression
+
+init_var _ 0 * init_heap
+
+add_A * * r add_A
+add_A _ A r init_var
+add_B * * r add_B
+add_B _ B r init_var
+add_C * * r add_C
+add_C _ C r init_var
+add_D * * r add_D
+add_D _ D r init_var
+add_E * * r add_E
+add_E _ E r init_var
+add_F * * r add_F
+add_F _ F r init_var
+
+; reset_expression
+
+reset_expr * * r reset_expr
+reset_expr A a r reset_expr
+reset_expr B b r reset_expr
+reset_expr C c r reset_expr
+reset_expr D d r reset_expr
+reset_expr E e r reset_expr
+reset_expr F f r reset_expr
+reset_expr n & r reset_expr
+reset_expr o + r reset_expr
+reset_expr t ! r reset_expr
+reset_expr @ @ l eval_expr
+
+reset_to_@ * * l reset_to_@
+reset_to_@ @ @ l eval_expr
+
+
+; Find next command
+eval_expr * * l eval_expr
+eval_expr 0 x r push_0  ; found 0
+eval_expr 1 y r push_1  ; found 1
+eval_expr a A r push_a  ; found a ; find value of A first then push onto stack
+eval_expr b B r push_b  ; found b
+eval_expr c C r push_c  ; found c
+eval_expr d D r push_d  ; found d
+eval_expr e E r push_e  ; found e
+eval_expr f F r push_f  ; found f
+eval_expr & n r eval_and  ; found &
+eval_expr + o r eval_or  ; found +
+eval_expr ! t l eval_not  ; found !
+eval_expr _ _ r halt-reject; TODO Try again with new permutation also check if true
+1 _ _ l 2    ; reached end-of-input
+2 x _ l 2
+2 _ _ l halt ; finished
+
+; push a 0 onto the stack
+push_0 * * r push_0
+push_0 _ _ r push_0_stack
+push_0_stack * * r push_0_stack
+push_0_stack _ 0 l reset_to_@
+
+; push a 1 onto the stack
+push_1 * * r push_1
+push_1 _ _ r push_1_stack
+push_1_stack * * r push_1_stack
+push_1_stack _ 1 l reset_to_@
+
+; TODO add symbols to stack
+push_a * * r push_a
+push_a @ @ r find_a ; find A
+find_a * * r find_a;
+find_a A A r val_a;
+val_a 0 0 * push_0;
+val_a 1 1 * push_1;
+
+
+;eval_and
+;eval_or
+eval_or * * r eval_or
+eval_or _ _ r goto_stack_or
+goto_stack_or * * r goto_stack_or
+goto_stack_or _ _ r stack_or
+stack_or * * r stack_or
+stack_or _ _ l stack_or
+stack_or 1 _ l stack_or_1
+stack_or 0 _ l stack_or_0
+stack_or_1 1 1 l reset_to_@
+stack_or_1 0 1 l reset_to_@
+stack_or_0 1 1 l reset_to_@
+stack_or_0 0 0 l reset_to_@
+
+;eval_not
+eval_not * * r eval_not
+eval_not _ _ r goto_stack_not
+goto_stack_not * * r goto_stack_not
+goto_stack_not _ _ r stack_not
+stack_not * * r stack_not
+stack_not _ _ l stack_not
+stack_not 1 0 l reset_to_@
+stack_not 0 1 l reset_to_@
+
