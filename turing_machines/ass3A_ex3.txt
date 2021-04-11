@@ -114,6 +114,19 @@ val_a 1 1 * push_1;
 
 
 ;eval_and
+eval_and * * r eval_and
+eval_and _ _ r goto_stack_and
+goto_stack_and * * r goto_stack_and
+goto_stack_and _ _ r stack_and
+stack_and * * r stack_and
+stack_and _ _ l stack_and
+stack_and 1 _ l stack_and_1
+stack_and 0 _ l stack_and_0
+stack_and_1 1 1 l reset_to_@
+stack_and_1 0 0 l reset_to_@
+stack_and_0 1 0 l reset_to_@
+stack_and_0 0 0 l reset_to_@
+
 ;eval_or
 eval_or * * r eval_or
 eval_or _ _ r goto_stack_or
