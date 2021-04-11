@@ -24,7 +24,6 @@
 ;   11&    - returns 1  (= 1 and 1)
 ;   01~1|& - returns 0    (= (not 1 or 1) and 0)
 
-; start from the right
 0 * * r 0
 0 _ @ * init_heap ; setup heap
 
@@ -33,27 +32,38 @@
 
 ; find all the variables and set their values
 init_heap * * l init_heap
-init_heap a A * add_A
-init_heap b B * add_B
-init_heap c C * add_C
-init_heap d D * add_D
-init_heap e E * add_E
-init_heap f F * add_F
+init_heap a A r add_A ; r because it's bias to the right side due to reverse polish notation evaluation
+init_heap b B r add_B
+init_heap c C r add_C
+init_heap d D r add_D
+init_heap e E r add_E
+init_heap f F r add_F
 init_heap _ _ r reset_expr; when you've reached the end restore the boolean expression
 
 init_var _ 0 * init_heap
 
 add_A * * r add_A
+add_A A A * init_heap ; skip when there's already the variable
 add_A _ A r init_var
+
 add_B * * r add_B
+add_B B B * init_heap
 add_B _ B r init_var
+
 add_C * * r add_C
+add_C C C * init_heap
 add_C _ C r init_var
+
 add_D * * r add_D
+add_D D D * init_heap
 add_D _ D r init_var
+
 add_E * * r add_E
+add_E E E * init_heap
 add_E _ E r init_var
+
 add_F * * r add_F
+add_F F F * init_heap
 add_F _ F r init_var
 
 ; reset_expression
@@ -87,10 +97,31 @@ eval_expr f F r push_f  ; found f
 eval_expr & n r eval_and  ; found &
 eval_expr + o r eval_or  ; found +
 eval_expr ! t l eval_not  ; found !
-eval_expr _ _ r halt-reject; TODO Try again with new permutation also check if true
+eval_expr _ _ r is_done;
 1 _ _ l 2    ; reached end-of-input
 2 x _ l 2
 2 _ _ l halt ; finished
+
+; check if assignment is true and that there's no 0s in the heap
+is_done * * r is_done
+is_done _ _ r is_done_bool
+is_done_bool 1 1 * halt-accept
+is_done_bool 0 _ l is_heap_all_1 ; TODO check if the heap is all 1 otherwise add 1 to heap and re-evaluate
+is_heap_all_1 * * l is_heap_all_1
+is_heap_all_1 @ @ * halt-reject ; we assume it's true so if we do reach @ then we've tried it all
+is_heap_all_1 0 0 * add_1_to_heap;
+
+; add 1 to heap
+add_1_to_heap * * * end_of_heap;
+end_of_heap * * r end_of_heap
+end_of_heap _ _ l add_1
+add_1 * * l add_1
+add_1 0 1 * reset_head_reset_expr
+add_1 1 0 l add_1
+add_1 @ @ * halt-reject
+
+reset_head_reset_expr * * l reset_head_reset_expr
+reset_head_reset_expr _ _ r reset_expr
 
 ; push a 0 onto the stack
 push_0 * * r push_0
@@ -104,13 +135,40 @@ push_1 _ _ r push_1_stack
 push_1_stack * * r push_1_stack
 push_1_stack _ 1 l reset_to_@
 
+read_var 0 0 * push_0;
+read_var 1 1 * push_1;
+
 ; TODO add symbols to stack
 push_a * * r push_a
 push_a @ @ r find_a ; find A
 find_a * * r find_a;
-find_a A A r val_a;
-val_a 0 0 * push_0;
-val_a 1 1 * push_1;
+find_a A A r read_var;
+
+push_b * * r push_b
+push_b @ @ r find_b ; find B
+find_b * * r find_b;
+find_b B B r read_var;
+
+push_c * * r push_c
+push_c @ @ r find_c ; find C
+find_c * * r find_c;
+find_c C C r read_var;
+
+push_d * * r push_d
+push_d @ @ r find_d ; find D
+find_d * * r find_d;
+find_d D D r read_var;
+
+push_e * * r push_e
+push_e @ @ r find_e ; find E
+find_e * * r find_e;
+find_e E E r read_var;
+
+push_f * * r push_f
+push_f @ @ r find_f ; find F
+find_f * * r find_f;
+find_f F F r read_var;
+
 
 
 ;eval_and
